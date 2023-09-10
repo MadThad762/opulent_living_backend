@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "strict": true,
+    "jsx": "preserve",
+    "jsxFragmentFactory": "Fragment",
+    "jsxFactory": "jsx",
+    "jsxImportSource": "hono/jsx",
+    "lib": ["es2015"]
+  }
+}

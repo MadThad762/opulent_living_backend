@@ -1,0 +1,34 @@
+# Node.js dependencies
+node_modules/
+
+# TypeScript generated files
+dist/
+*.tsbuildinfo
+
+# Environment variables
+.env
+
+# IDE and Editor folders
+.vscode/
+.idea/
+
+# Operating System specific files
+.DS_Store
+Thumbs.db
+
+# Logs and other output
+*.log
+*.log.*
+
+# Package manager lock files
+yarn.lock
+package-lock.json
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+*.swn
+
+# Other generated files
+npm-debug.log*

@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Property {
+  id             Int      @default(autoincrement()) @id
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String   @db.VarChar(255)      
+  images         String   @db.VarChar(255)
+  title          String   @db.VarChar(255)
+  description    String   @db.VarChar(255)
+  price          String   @db.VarChar(255)
+  numberOfBeds   Int
+  numberOfBaths  Int
+  sqft           Int
+  propertyType   String  @db.VarChar(255) 
+  isFeatured     Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  isSold         Boolean  @default(false)
+}

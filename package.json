@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "dev": "bun run --hot src/index.ts"
+  },
+  "dependencies": {
+    "@planetscale/database": "^1.11.0",
+    "@prisma/client": "^5.2.0",
+    "hono": "^3.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.0",
+    "bun-types": "^0.6.2",
+    "prisma": "^5.2.0"
+  }
+}
