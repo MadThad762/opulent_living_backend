@@ -13,10 +13,10 @@ model Property {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   createdBy      String   @db.VarChar(255)      
-  images         String   @db.VarChar(255)
+  imageUrls      Json     @db.Json
   title          String   @db.VarChar(255)
   description    String   @db.VarChar(255)
-  price          String   @db.VarChar(255)
+  price          Int
   numberOfBeds   Int
   numberOfBaths  Int
   sqft           Int

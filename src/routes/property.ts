@@ -30,7 +30,7 @@ property.post('/', async (c) => {
 
   const {
     createdBy,
-    images,
+    imageUrls,
     title,
     description,
     price,
@@ -45,10 +45,10 @@ property.post('/', async (c) => {
 
   if (
     !createdBy ||
-    !images ||
+    !imageUrls ||
     !title ||
     !description ||
-    !price ||
+    price === undefined ||
     numberOfBeds === undefined ||
     numberOfBaths === undefined ||
     !sqft === undefined ||
@@ -63,7 +63,7 @@ property.post('/', async (c) => {
   const property = await prisma.property.create({
     data: {
       createdBy,
-      images,
+      imageUrls,
       title,
       description,
       price,
@@ -87,7 +87,7 @@ property.put('/:id', async (c) => {
 
   const {
     createdBy,
-    images,
+    imageUrls,
     title,
     description,
     price,
@@ -102,10 +102,10 @@ property.put('/:id', async (c) => {
 
   if (
     !createdBy ||
-    !images ||
+    !imageUrls ||
     !title ||
     !description ||
-    !price ||
+    price === undefined ||
     numberOfBeds === undefined ||
     numberOfBaths === undefined ||
     !sqft ||
@@ -121,7 +121,7 @@ property.put('/:id', async (c) => {
     where: { id },
     data: {
       createdBy,
-      images,
+      imageUrls,
       title,
       description,
       price,
@@ -148,7 +148,7 @@ property.delete('/:id', async (c) => {
   });
 
   if (existingProperty === null) {
-    return c.text('Property not found', 404);
+    return c.notFound();
   }
 
   await prisma.property.delete({
