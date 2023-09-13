@@ -1,20 +1,27 @@
 import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
+import { Clerk } from '@clerk/backend';
 
 const property = new Hono();
 const prisma = new PrismaClient();
+const clerk = Clerk({ apiKey: process.env.CLERK_API_KEY });
 
 // Get all properties
 property.get('/', async (c) => {
-  const properties = await prisma.property.findMany();
-  return c.json(properties);
+  try {
+    const properties = await prisma.property.findMany();
+    return c.json(properties);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    return c.text('Internal Server Error', 500);
+  }
 });
 
 // Get a single property
 property.get('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = Number(c.req.param('id'));
   const property = await prisma.property.findUnique({
-    where: { id: Number(id) },
+    where: { id },
   });
 
   if (property === null) {
