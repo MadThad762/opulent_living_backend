@@ -3,7 +3,7 @@ import { cors } from 'hono/cors';
 import property from './routes/property';
 
 const app = new Hono();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 8080;
 
 app.use(
   '/*',
@@ -16,8 +16,6 @@ app.use(
     credentials: true,
   }),
 );
-
-app.get('/', (c) => c.text('Opulent Living API'));
 
 app.route('/properties', property);
 
