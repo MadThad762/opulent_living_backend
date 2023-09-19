@@ -1,20 +1,8 @@
 import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
 import { Clerk } from '@clerk/backend';
-
-interface PropertyData {
-  imageUrls: string[];
-  title: string;
-  description: string;
-  price: number;
-  numberOfBeds: number;
-  numberOfBaths: number;
-  sqft: number;
-  propertyType: string;
-  isFeatured: boolean;
-  isActive: boolean;
-  isSold: boolean;
-}
+import { PropertyData } from '../lib/types/PropertyTypes';
+import { File } from 'buffer';
 
 const property = new Hono();
 const prisma = new PrismaClient();
@@ -30,23 +18,22 @@ const validateData = (data: PropertyData) => {
     numberOfBaths,
     sqft,
     propertyType,
-    isFeatured,
-    isActive,
-    isSold,
   } = data;
 
+  const priceNumber = Number(price);
+  const numberOfBedsNumber = Number(numberOfBeds);
+  const numberOfBathsNumber = Number(numberOfBaths);
+  const sqftNumber = Number(sqft);
+
   if (
-    !Array.isArray(imageUrls) ||
+    !(imageUrls instanceof Blob) ||
     typeof title !== 'string' ||
     typeof description !== 'string' ||
-    typeof price !== 'number' ||
-    typeof numberOfBeds !== 'number' ||
-    typeof numberOfBaths !== 'number' ||
-    typeof sqft !== 'number' ||
-    typeof propertyType !== 'string' ||
-    typeof isFeatured !== 'boolean' ||
-    typeof isActive !== 'boolean' ||
-    typeof isSold !== 'boolean'
+    isNaN(priceNumber) ||
+    isNaN(numberOfBedsNumber) ||
+    isNaN(numberOfBathsNumber) ||
+    isNaN(sqftNumber) ||
+    typeof propertyType !== 'string'
   ) {
     return false;
   }
@@ -90,7 +77,7 @@ property.post('/', async (c) => {
       const session = await clerk.sessions.verifySession(sessionId, token);
       if (session && session.status === 'active') {
         const createdBy = session.userId;
-        const data = await c.req.json();
+        const data = (await c.req.parseBody()) as PropertyData;
 
         if (!validateData(data)) {
           return c.text('Invalid input data', 400);
@@ -105,9 +92,6 @@ property.post('/', async (c) => {
           numberOfBaths,
           sqft,
           propertyType,
-          isFeatured,
-          isActive,
-          isSold,
         } = data;
 
         const property = await prisma.property.create({
@@ -121,9 +105,6 @@ property.post('/', async (c) => {
             numberOfBaths,
             sqft,
             propertyType,
-            isFeatured,
-            isActive,
-            isSold,
           },
         });
 
@@ -178,9 +159,6 @@ property.put('/:id', async (c) => {
           numberOfBaths,
           sqft,
           propertyType,
-          isFeatured,
-          isActive,
-          isSold,
         } = data;
 
         const property = await prisma.property.update({
@@ -194,9 +172,6 @@ property.put('/:id', async (c) => {
             numberOfBaths,
             sqft,
             propertyType,
-            isFeatured,
-            isActive,
-            isSold,
           },
         });
 
