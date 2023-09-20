@@ -2,11 +2,22 @@ import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
 import { Clerk } from '@clerk/backend';
 import { PropertyData } from '../lib/types/PropertyTypes';
+import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
 
 const property = new Hono();
 const prisma = new PrismaClient();
 const clerk = Clerk({ apiKey: process.env.CLERK_API_KEY });
+
+const propertySchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  imageUrls: z.any(),
+  numberOfBeds: z.string(),
+  numberOfBaths: z.string(),
+  sqft: z.string(),
+  price: z.string(),
+});
 
 const validateData = (data: PropertyData) => {
   const {
@@ -68,7 +79,7 @@ property.get('/:id', async (c) => {
   }
 });
 
-property.post('/', async (c) => {
+property.post('/', zValidator('form', propertySchema), async (c) => {
   const sessionId = c.req.header('sessionId');
   const token = c.req.header('authorization');
 
@@ -78,10 +89,6 @@ property.post('/', async (c) => {
       if (session && session.status === 'active') {
         const createdBy = session.userId;
         const data = (await c.req.parseBody()) as PropertyData;
-
-        if (!validateData(data)) {
-          return c.text('Invalid input data', 400);
-        }
 
         const {
           imageUrls,
@@ -109,7 +116,7 @@ property.post('/', async (c) => {
         }); */
 
         /* return c.json(property); */
-        return c.text('success', 200);
+        return c.text('Property created successfully', 200);
       } else {
         return c.text('Unauthorized', 401);
       }

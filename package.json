@@ -7,7 +7,9 @@
     "@hono/zod-validator": "^0.1.8",
     "@planetscale/database": "^1.11.0",
     "@prisma/client": "^5.2.0",
-    "hono": "^3.5.4"
+    "aws-sdk": "^2.1461.0",
+    "hono": "^3.5.4",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
     "@types/node": "^20.6.0",

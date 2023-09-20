@@ -23,6 +23,7 @@ Thumbs.db
 # Package manager lock files
 yarn.lock
 package-lock.json
+bun.lockb
 
 # Temporary files
 *.tmp
