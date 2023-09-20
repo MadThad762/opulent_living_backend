@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { PrismaClient } from '@prisma/client';
 import { Clerk } from '@clerk/backend';
 import { PropertyData } from '../lib/types/PropertyTypes';
-import { File } from 'buffer';
+import { zValidator } from '@hono/zod-validator';
 
 const property = new Hono();
 const prisma = new PrismaClient();
@@ -94,7 +94,7 @@ property.post('/', async (c) => {
           propertyType,
         } = data;
 
-        const property = await prisma.property.create({
+        /* const property = await prisma.property.create({
           data: {
             createdBy,
             imageUrls,
@@ -106,9 +106,10 @@ property.post('/', async (c) => {
             sqft,
             propertyType,
           },
-        });
+        }); */
 
-        return c.json(property);
+        /* return c.json(property); */
+        return c.text('success', 200);
       } else {
         return c.text('Unauthorized', 401);
       }
