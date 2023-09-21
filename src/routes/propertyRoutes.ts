@@ -1,12 +1,14 @@
 import { Hono } from 'hono';
-import { PrismaClient } from '@prisma/client';
 import { Clerk } from '@clerk/backend';
 import { PropertyData } from '../lib/types/PropertyTypes';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
+import { db } from '../lib/db';
+import { property } from '../../.drizzle/schema';
+import { eq } from 'drizzle-orm';
+import { File } from 'buffer';
 
-const property = new Hono();
-const prisma = new PrismaClient();
+const propertyRoutes = new Hono();
 const clerk = Clerk({ apiKey: process.env.CLERK_API_KEY });
 
 const propertySchema = z.object({
@@ -19,67 +21,36 @@ const propertySchema = z.object({
   price: z.string(),
 });
 
-const validateData = (data: PropertyData) => {
-  const {
-    imageUrls,
-    title,
-    description,
-    price,
-    numberOfBeds,
-    numberOfBaths,
-    sqft,
-    propertyType,
-  } = data;
-
-  const priceNumber = Number(price);
-  const numberOfBedsNumber = Number(numberOfBeds);
-  const numberOfBathsNumber = Number(numberOfBaths);
-  const sqftNumber = Number(sqft);
-
-  if (
-    !(imageUrls instanceof Blob) ||
-    typeof title !== 'string' ||
-    typeof description !== 'string' ||
-    isNaN(priceNumber) ||
-    isNaN(numberOfBedsNumber) ||
-    isNaN(numberOfBathsNumber) ||
-    isNaN(sqftNumber) ||
-    typeof propertyType !== 'string'
-  ) {
-    return false;
-  }
-  return true;
-};
-
-property.get('/', async (c) => {
+// get single property (finished)
+propertyRoutes.get('/', async (c) => {
   try {
-    const properties = await prisma.property.findMany();
-    return c.json(properties);
+    const result = await db.query.property.findMany();
+    return c.json(result);
   } catch (error) {
     console.error('Error fetching properties:', error);
     return c.text('Internal Server Error', 500);
   }
 });
 
-property.get('/:id', async (c) => {
+// get single property by id (finished)
+propertyRoutes.get('/:id', async (c) => {
   try {
     const id = Number(c.req.param('id'));
-    const property = await prisma.property.findUnique({
-      where: { id },
-    });
+    const result = await db.select().from(property).where(eq(property.id, id));
 
-    if (property === null) {
+    if (result === null) {
       return c.notFound();
     }
 
-    return c.json(property);
+    return c.json(result);
   } catch (error) {
     console.error('Error fetching property:', error);
     return c.text('Internal Server Error', 500);
   }
 });
 
-property.post('/', zValidator('form', propertySchema), async (c) => {
+// create property (working on it)
+propertyRoutes.post('/', zValidator('form', propertySchema), async (c) => {
   const sessionId = c.req.header('sessionId');
   const token = c.req.header('authorization');
 
@@ -88,9 +59,9 @@ property.post('/', zValidator('form', propertySchema), async (c) => {
       const session = await clerk.sessions.verifySession(sessionId, token);
       if (session && session.status === 'active') {
         const createdBy = session.userId;
-        const data = (await c.req.parseBody()) as PropertyData;
+        const FormData = await c.req.formData();
 
-        const {
+        /* const {
           imageUrls,
           title,
           description,
@@ -99,7 +70,9 @@ property.post('/', zValidator('form', propertySchema), async (c) => {
           numberOfBaths,
           sqft,
           propertyType,
-        } = data;
+        } = data; */
+
+        const imageFile = 
 
         /* const property = await prisma.property.create({
           data: {
@@ -129,7 +102,7 @@ property.post('/', zValidator('form', propertySchema), async (c) => {
   }
 });
 
-property.put('/:id', async (c) => {
+/* propertyRoutes.put('/:id', async (c) => {
   const sessionId = c.req.header('sessionId');
   const token = c.req.header('authorization');
 
@@ -194,9 +167,9 @@ property.put('/:id', async (c) => {
   } else {
     return c.text('Unauthorized', 401);
   }
-});
+}); */
 
-property.delete('/:id', async (c) => {
+/* propertyRoutes.delete('/:id', async (c) => {
   const sessionId = c.req.header('sessionId');
   const token = c.req.header('authorization');
 
@@ -234,6 +207,6 @@ property.delete('/:id', async (c) => {
   } else {
     return c.text('Unauthorized', 401);
   }
-});
+}); */
 
-export default property;
+export default propertyRoutes;

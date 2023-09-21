@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import property from './routes/property';
+import propertyRoutes from './routes/propertyRoutes';
 
 const app = new Hono();
 const port = process.env.PORT || 8080;
@@ -20,7 +20,7 @@ app.use(
 
 app.use(logger());
 
-app.route('/properties', property);
+app.route('/properties', propertyRoutes);
 
 console.log(`Server listening on port ${port}`);
 
