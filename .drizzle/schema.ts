@@ -2,23 +2,22 @@ import {
   mysqlTable,
   primaryKey,
   int,
-  datetime,
   varchar,
-  json,
   boolean,
+  timestamp,
 } from 'drizzle-orm/mysql-core';
-import { sql } from 'drizzle-orm';
 
 export const property = mysqlTable(
   'Property',
   {
     id: int('id').autoincrement().notNull(),
-    createdAt: datetime('createdAt', { mode: 'string', fsp: 3 })
-      .default(sql`CURRENT_TIMESTAMP(3)`)
-      .notNull(),
-    updatedAt: datetime('updatedAt', { mode: 'string', fsp: 3 }).notNull(),
+    createdAt: timestamp('createdAt', { mode: 'string', fsp: 3 }).defaultNow(),
+    updatedAt: timestamp('updatedAt', { mode: 'string', fsp: 3 }).defaultNow(),
     createdBy: varchar('createdBy', { length: 255 }).notNull(),
-    imageUrls: json('imageUrls').notNull(),
+    imagePublicId: varchar('imagePublicId', { length: 255 }).notNull(),
+    imageUrl: varchar('imageUrl', { length: 255 }).notNull(),
+    originalImageUrl: varchar('imageOriginalUrl', { length: 255 }).notNull(),
+    thumbnailUrl: varchar('imageThumbnailUrl', { length: 255 }).notNull(),
     title: varchar('title', { length: 255 }).notNull(),
     description: varchar('description', { length: 255 }).notNull(),
     price: int('price').notNull(),
