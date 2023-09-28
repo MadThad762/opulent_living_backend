@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { Clerk } from '@clerk/backend';
 import { db } from '../lib/db';
 import { property } from '../../.drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { File } from 'buffer';
 import { v4 as uuidv4 } from 'uuid';
 import cloudinary from '../lib/cloudinary';
@@ -13,7 +13,51 @@ const clerk = Clerk({ apiKey: process.env.CLERK_API_KEY });
 // get all properties
 propertyRoutes.get('/', async (c) => {
   try {
-    const results = await db.query.property.findMany();
+    let query = db.select().from(property);
+
+    const isFeatured = c.req.query('isFeatured');
+    if (isFeatured) {
+      query = query.where(eq(property.isFeatured, isFeatured === 'true'));
+    }
+
+    const limit = c.req.query('limit');
+    if (limit) {
+      query = query.limit(Number(limit));
+    }
+
+    const results = await query.execute();
+
+    return c.json(results);
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    return c.text('Internal Server Error', 500);
+  }
+});
+
+// get all properties for a user
+propertyRoutes.get('/user/:createdBy', async (c) => {
+  try {
+    const createdBy = c.req.param('createdBy');
+
+    let conditions = [eq(property.createdBy, createdBy)];
+
+    const isFeatured = c.req.query('isFeatured');
+    if (isFeatured) {
+      conditions.push(eq(property.isFeatured, isFeatured === 'true'));
+    }
+
+    let query = db
+      .select()
+      .from(property)
+      .where(and(...conditions));
+
+    const limit = c.req.query('limit');
+    if (limit) {
+      query = query.limit(Number(limit));
+    }
+
+    const results = await query.execute();
+
     return c.json(results);
   } catch (error) {
     console.error('Error fetching properties:', error);
@@ -100,18 +144,11 @@ propertyRoutes.post('/', async (c) => {
               .end(nodeBuffer);
           })
             .then(async (resolvedImageName: any) => {
-              const mainImageUrl = `https://res.cloudinary.com/dwfmymy4z/image/upload/w_2000/v1695871206/property_listings/${imageName}.jpg`;
-              const originalImageUrl = `https://res.cloudinary.com/dwfmymy4z/image/upload/v1695871206/property_listings/${imageName}.jpg`;
-              const thumbnailUrl = `https://res.cloudinary.com/dwfmymy4z/image/upload/w_750/v1695871206/property_listings/${imageName}.jpg`;
-
               await db.insert(property).values({
                 createdBy,
                 title,
                 description,
                 imagePublicId: imageName,
-                imageUrl: mainImageUrl,
-                originalImageUrl,
-                thumbnailUrl,
                 propertyType,
                 numberOfBeds,
                 numberOfBaths,
@@ -145,6 +182,54 @@ propertyRoutes.post('/', async (c) => {
   } else {
     console.error(
       'Error creating property listing: sessionId or token missing',
+    );
+    return c.text('Unauthorized', 401);
+  }
+});
+
+// delete property
+propertyRoutes.delete('/:id', async (c) => {
+  const sessionId = c.req.header('sessionId');
+  const token = c.req.header('authorization');
+
+  if (sessionId && token) {
+    try {
+      const session = await clerk.sessions.verifySession(sessionId, token);
+      if (session && session.status === 'active') {
+        const propertyId = Number(c.req.param('id'));
+        const results = await db
+          .select()
+          .from(property)
+          .where(eq(property.id, propertyId));
+
+        if (Array.isArray(results) && results.length === 0) {
+          return c.notFound();
+        }
+
+        const listing = results[0];
+
+        if (listing.createdBy !== session.userId) {
+          return c.text('Unauthorized', 401);
+        }
+
+        // Delete the image from Cloudinary
+        cloudinary.uploader.destroy(listing.imagePublicId);
+
+        // Delete the listing from the database
+        await db.delete(property).where(eq(property.id, propertyId)).execute();
+
+        return c.json({ message: 'Listing successfully deleted.' });
+      } else {
+        console.error('Error deleting property listing: session not active');
+        return c.text('Unauthorized', 401);
+      }
+    } catch (error) {
+      console.error('Error deleting property listing:', error);
+      return c.text('Internal Server Error', 500);
+    }
+  } else {
+    console.error(
+      'Error deleting property listing: sessionId or token missing',
     );
     return c.text('Unauthorized', 401);
   }
